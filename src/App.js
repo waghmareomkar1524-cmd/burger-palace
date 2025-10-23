@@ -248,8 +248,8 @@ const App = () => {
       <nav className="relative z-10 p-6">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <div className="text-4xl animate-bounce">🍔</div>
-            <span className="text-2xl font-bold text-white">Burger Palace</span>
+            <div className="text-4xl animate-bounce">☕</div>
+            <span className="text-2xl font-bold text-white">Classic Cafe</span>
           </div>
           <button className="text-white hover:text-yellow-300 transition-colors">
             Menu
@@ -264,15 +264,15 @@ const App = () => {
           <div className="mb-6 animate-fade-scale">
             <h1 className="text-6xl md:text-7xl font-black mb-4 leading-tight">
               <span className="block bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent animate-glow">
-                BURGER
+                CLASSIC
               </span>
-              <span className="block text-white">PALACE</span>
+              <span className="block text-yellow-300 font-black drop-shadow-2xl text-6xl md:text-7xl animate-glow">CAFE</span>
             </h1>
             <p className="text-xl md:text-2xl font-light mb-2 opacity-90 animate-slide-up">
-              Where Every Bite is a
+              Where Every Sip is a
             </p>
             <p className="text-2xl md:text-3xl font-bold text-yellow-300 mb-4 animate-slide-up">
-              FLAVOR EXPLOSION! 🔥
+              COFFEE EXPERIENCE! ☕
             </p>
           </div>
 
@@ -283,7 +283,7 @@ const App = () => {
               className="group relative bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-12 py-4 rounded-full text-xl font-bold hover:from-yellow-300 hover:to-orange-400 transition-all transform hover:scale-110 shadow-2xl hover:shadow-yellow-500/50"
             >
               <span className="relative z-10 flex items-center gap-2">
-                🍔 ORDER NOW
+                ☕ ORDER NOW
                 <span className="group-hover:translate-x-1 transition-transform">→</span>
               </span>
               <div className="absolute inset-0 bg-gradient-to-r from-yellow-300 to-orange-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
@@ -309,11 +309,11 @@ const App = () => {
             </div>
           </div>
 
-          {/* Floating food animations */}
-          <div className="absolute top-20 left-10 text-6xl animate-float opacity-20">🍔</div>
-          <div className="absolute top-40 right-20 text-4xl animate-bounce opacity-30">🍟</div>
-          <div className="absolute bottom-40 left-20 text-5xl animate-float opacity-25">🥤</div>
-          <div className="absolute bottom-20 right-10 text-3xl animate-bounce opacity-30">🍦</div>
+          {/* Floating cafe animations */}
+          <div className="absolute top-20 left-10 text-6xl animate-float opacity-20">☕</div>
+          <div className="absolute top-40 right-20 text-4xl animate-bounce opacity-30">🥐</div>
+          <div className="absolute bottom-40 left-20 text-5xl animate-float opacity-25">🍰</div>
+          <div className="absolute bottom-20 right-10 text-3xl animate-bounce opacity-30">🥧</div>
         </div>
       </div>
 
@@ -476,8 +476,8 @@ const App = () => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="text-4xl">🍔</div>
-              <h1 className="text-2xl font-bold">Burger Palace</h1>
+              <div className="text-4xl">☕</div>
+              <h1 className="text-2xl font-bold">Classic Cafe</h1>
             </div>
             <button
               onClick={() => setShowCart(true)}

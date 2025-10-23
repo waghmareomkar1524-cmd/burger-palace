@@ -8,7 +8,7 @@ export const RAZORPAY_CONFIG = {
   
   // App Configuration
   currency: 'INR',
-  name: 'Burger Palace',
+  name: 'Classic Cafe',
   description: 'Food Order Payment',
   image: 'https://via.placeholder.com/150', // Replace with your restaurant logo URL
   
