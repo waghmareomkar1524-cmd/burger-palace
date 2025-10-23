@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { ShoppingCart, Plus, Minus, Trash2, Check, X, Grid, List, LayoutGrid } from 'lucide-react';
 import { RAZORPAY_CONFIG } from './razorpay-config';
+import { OrderService } from './firebase-service';
 
 const menuData = {
   burgers: [
@@ -35,6 +36,7 @@ const App = () => {
   const [showCart, setShowCart] = useState(false);
   const [cartAnimation, setCartAnimation] = useState(false);
   const [addedItemId, setAddedItemId] = useState(null);
+  const [orderNumber, setOrderNumber] = useState(null);
 
   const generateOrderNumber = () => {
     return 'ORD' + Date.now().toString().slice(-8);
@@ -130,16 +132,42 @@ const App = () => {
         name: RAZORPAY_CONFIG.name,
         description: `${RAZORPAY_CONFIG.description} - Order #${Date.now()}`,
         image: RAZORPAY_CONFIG.image,
-        handler: function (response) {
+        handler: async function (response) {
           // Payment successful
           console.log('Payment successful:', response);
+          
+          // Save order to Firebase
+          const orderData = {
+            orderNumber: generateOrderNumber(),
+            tableNumber: tableNumber,
+            items: cart.map(item => ({
+              name: item.name,
+              quantity: item.quantity,
+              price: item.price
+            })),
+            total: Math.round(calculateTotal() * 1.05)
+          };
+          
+          try {
+            const result = await OrderService.saveOrder(orderData);
+            if (result.success) {
+              setOrderNumber(result.orderNumber);
+              console.log('Order saved to Firebase:', result);
+            } else {
+              console.error('Failed to save order:', result.error);
+            }
+          } catch (error) {
+            console.error('Error saving order to Firebase:', error);
+          }
+          
           setOrderStatus('success');
           setCart([]);
           setTimeout(() => {
             setOrderStatus(null);
+            setOrderNumber(null);
             setCurrentPage('menu');
             setShowCart(false);
-          }, 3000);
+          }, 5000); // Increased timeout to show order number
         },
         prefill: {
           name: 'Omkar Waghmare',
@@ -683,6 +711,12 @@ const App = () => {
                 </div>
                 <h2 className="text-2xl font-bold mb-2">Order Successful!</h2>
                 <p className="text-gray-600 mb-4">Your order has been placed successfully. We'll prepare it right away!</p>
+                {orderNumber && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                    <p className="text-lg font-bold text-green-800">Order Number: {orderNumber}</p>
+                    <p className="text-sm text-green-600">Please keep this number for reference</p>
+                  </div>
+                )}
                 <p className="text-sm text-gray-500">Table: {tableNumber}</p>
               </>
             ) : (
