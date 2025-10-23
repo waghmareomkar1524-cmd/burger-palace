@@ -36,7 +36,7 @@ Thumbs.db
 .env.production.local
 
 # Razorpay credentials (for security)
-src/razorpay-config.js
+# src/razorpay-config.js - commented out for demo deployment
 
 # Temporary files
 *.tmp
