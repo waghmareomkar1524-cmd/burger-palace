@@ -1,0 +1,16 @@
+{
+  "rules": {
+    "users": {
+      ".read": true,
+      ".write": true
+    },
+    "orders": {
+      ".read": true,
+      ".write": true
+    },
+    "queue": {
+      ".read": true,
+      ".write": true
+    }
+  }
+}

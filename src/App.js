@@ -1,7 +1,12 @@
-import React, { useState, useCallback } from 'react';
-import { ShoppingCart, Plus, Minus, Trash2, Check, X, Grid, List, LayoutGrid } from 'lucide-react';
+import React, { useState, useCallback, useEffect } from 'react';
+import { ShoppingCart, Plus, Minus, Trash2, Check, X, Grid, List, LayoutGrid, User } from 'lucide-react';
 import { RAZORPAY_CONFIG } from './razorpay-config';
 import { OrderService } from './firebase-service';
+import { AuthServiceNew } from './auth-service-new';
+import AuthLanding from './components/AuthLanding';
+import AuthLogin from './components/AuthLogin';
+import AuthRegister from './components/AuthRegister';
+import MyAccount from './components/MyAccount';
 
 const menuData = {
   burgers: [
@@ -27,7 +32,7 @@ const menuData = {
 };
 
 const App = () => {
-  const [currentPage, setCurrentPage] = useState('landing');
+  const [currentPage, setCurrentPage] = useState('auth-landing');
   const [cart, setCart] = useState([]);
   const [layoutMode, setLayoutMode] = useState('grid');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -37,6 +42,42 @@ const App = () => {
   const [cartAnimation, setCartAnimation] = useState(false);
   const [addedItemId, setAddedItemId] = useState(null);
   const [orderNumber, setOrderNumber] = useState(null);
+  const [user, setUser] = useState(null);
+  const [showMyAccount, setShowMyAccount] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Authentication effect
+  useEffect(() => {
+    const unsubscribe = AuthServiceNew.onAuthStateChanged((user) => {
+      setUser(user);
+      setLoading(false);
+      
+      if (user) {
+        setCurrentPage('menu');
+      } else {
+        setCurrentPage('auth-landing');
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Authentication handlers
+  const handleLoginSuccess = (user) => {
+    setUser(user);
+    setCurrentPage('menu');
+  };
+
+  const handleRegisterSuccess = (user) => {
+    setUser(user);
+    setCurrentPage('menu');
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    setCurrentPage('auth-landing');
+    setShowMyAccount(false);
+  };
 
   const generateOrderNumber = () => {
     return 'ORD' + Date.now().toString().slice(-8);
@@ -149,7 +190,7 @@ const App = () => {
           };
           
           try {
-            const result = await OrderService.saveOrder(orderData);
+            const result = await OrderService.saveOrder(orderData, user?.uid);
             if (result.success) {
               setOrderNumber(result.orderNumber);
               console.log('Order saved to Firebase:', result);
@@ -407,7 +448,7 @@ const App = () => {
     const quantity = getItemQuantity(item.id);
     const isAdded = addedItemId === item.id;
     
-    return (
+      return (
       <div className={`bg-white rounded-xl shadow-md p-4 hover:shadow-lg transition-all flex items-center gap-4 ${isAdded ? 'ring-2 ring-orange-400 ring-opacity-50' : ''}`}>
         <div className="bg-gradient-to-br from-orange-400 to-red-500 w-24 h-24 rounded-xl flex items-center justify-center text-5xl flex-shrink-0 relative">
           {item.image}
@@ -454,7 +495,7 @@ const App = () => {
     const quantity = getItemQuantity(item.id);
     const isAdded = addedItemId === item.id;
     
-    return (
+      return (
       <div className={`bg-white rounded-lg shadow-md p-3 hover:shadow-lg transition-all ${isAdded ? 'ring-2 ring-orange-400 ring-opacity-50' : ''}`}>
         <div className="flex items-center gap-3">
           <div className="bg-gradient-to-br from-orange-400 to-red-500 w-16 h-16 rounded-lg flex items-center justify-center text-3xl flex-shrink-0 relative">
@@ -507,21 +548,30 @@ const App = () => {
               <div className="text-4xl">☕</div>
               <h1 className="text-2xl font-bold">Classic Cafe</h1>
             </div>
-            <button
-              onClick={() => setShowCart(true)}
-              className="bg-white text-red-600 px-6 py-2 rounded-full font-bold hover:bg-gray-100 transition-all flex items-center gap-2 relative group"
-            >
-              <ShoppingCart size={20} className={`transition-transform ${cartAnimation ? 'scale-110' : ''}`} />
-              <span>Cart</span>
-              {getTotalQuantity() > 0 && (
-                <span className={`absolute -top-2 -right-2 bg-gradient-to-r from-orange-500 to-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${cartAnimation ? 'scale-125 animate-pulse' : ''}`}>
-                  {getTotalQuantity()}
-                </span>
-              )}
-              {cartAnimation && (
-                <div className="absolute -top-1 -right-1 w-8 h-8 border-2 border-orange-400 rounded-full animate-ping"></div>
-              )}
-            </button>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setShowMyAccount(true)}
+                className="bg-white text-red-600 px-4 py-2 rounded-full font-bold hover:bg-gray-100 transition-all flex items-center gap-2"
+              >
+                <User size={20} />
+                My Account
+              </button>
+              <button
+                onClick={() => setShowCart(true)}
+                className="bg-white text-red-600 px-6 py-2 rounded-full font-bold hover:bg-gray-100 transition-all flex items-center gap-2 relative group"
+              >
+                <ShoppingCart size={20} className={`transition-transform ${cartAnimation ? 'scale-110' : ''}`} />
+                <span>Cart</span>
+                {getTotalQuantity() > 0 && (
+                  <span className={`absolute -top-2 -right-2 bg-gradient-to-r from-orange-500 to-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${cartAnimation ? 'scale-125 animate-pulse' : ''}`}>
+                    {getTotalQuantity()}
+                  </span>
+                )}
+                {cartAnimation && (
+                  <div className="absolute -top-1 -right-1 w-8 h-8 border-2 border-orange-400 rounded-full animate-ping"></div>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -734,7 +784,57 @@ const App = () => {
     </div>
   );
 
-  return currentPage === 'landing' ? <LandingPage /> : <MenuPage />;
+  // Show loading screen while checking authentication
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-red-700 flex items-center justify-center">
+        <div className="text-center text-white">
+          <div className="text-6xl mb-4 animate-bounce">☕</div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p className="text-xl">Loading Classic Cafe...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Route to different pages based on currentPage state
+  switch (currentPage) {
+    case 'auth-landing':
+      return <AuthLanding onNavigate={setCurrentPage} />;
+    
+    case 'login':
+      return (
+        <AuthLogin 
+          onBack={() => setCurrentPage('auth-landing')} 
+          onSuccess={handleLoginSuccess}
+        />
+      );
+    
+    case 'register':
+      return (
+        <AuthRegister 
+          onBack={() => setCurrentPage('auth-landing')} 
+          onSuccess={handleRegisterSuccess}
+        />
+      );
+    
+    case 'menu':
+      return (
+        <>
+          <MenuPage />
+          {showMyAccount && (
+            <MyAccount 
+              user={user} 
+              onLogout={handleLogout}
+              onClose={() => setShowMyAccount(false)}
+            />
+          )}
+        </>
+      );
+    
+    default:
+      return <AuthLanding onNavigate={setCurrentPage} />;
+  }
 };
 
 export default App;

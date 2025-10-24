@@ -17,12 +17,8 @@ import {
 export class OrderService {
   
   // Save order to Firebase
-  static async saveOrder(orderData) {
+  static async saveOrder(orderData, userId = null) {
     try {
-      const ordersRef = ref(database, 'orders');
-      const queueRef = ref(database, 'queue');
-      
-      // Generate unique order ID
       const orderId = Date.now().toString();
       
       // Prepare order data
@@ -37,8 +33,13 @@ export class OrderService {
         createdAt: Date.now()
       };
       
-      // Save to orders collection
+      // Save to global orders collection
       await set(ref(database, `orders/${orderId}`), order);
+      
+      // If userId is provided, also save to user's orders
+      if (userId) {
+        await set(ref(database, `users/${userId}/orders/${orderId}`), order);
+      }
       
       // Add to queue for ESP32
       const queueItem = {
