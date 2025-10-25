@@ -74,7 +74,15 @@ const AuthRegister = ({ onBack, onSuccess }) => {
       if (result.success) {
         setStep('otp');
       } else {
-        setErrors({ general: result.error });
+        if (result.shouldLogin) {
+          // User already exists, redirect to login
+          setErrors({ 
+            general: result.error,
+            shouldLogin: true 
+          });
+        } else {
+          setErrors({ general: result.error });
+        }
       }
     } catch (error) {
       setErrors({ general: 'Failed to send OTP. Please try again.' });
@@ -149,7 +157,18 @@ const AuthRegister = ({ onBack, onSuccess }) => {
         {/* Error Message */}
         {errors.general && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-            {errors.general}
+            <div className="flex items-center justify-between">
+              <span>{errors.general}</span>
+              {errors.shouldLogin && (
+                <button
+                  type="button"
+                  onClick={() => onBack()}
+                  className="ml-4 bg-orange-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-orange-600 transition-colors"
+                >
+                  Login Now
+                </button>
+              )}
+            </div>
           </div>
         )}
 
@@ -348,8 +367,6 @@ const AuthRegister = ({ onBack, onSuccess }) => {
           </p>
         </div>
 
-        {/* reCAPTCHA Container */}
-        <div id="recaptcha-container"></div>
       </div>
     </div>
   );

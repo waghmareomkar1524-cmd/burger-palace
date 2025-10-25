@@ -1,5 +1,5 @@
 import React from 'react';
-import { LogIn, UserPlus, Coffee, ArrowRight } from 'lucide-react';
+import { LogIn, UserPlus } from 'lucide-react';
 
 const AuthLanding = ({ onNavigate }) => {
   return (

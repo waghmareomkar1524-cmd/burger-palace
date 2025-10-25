@@ -16,6 +16,9 @@ const firebaseConfig = {
     measurementId: "G-VWHD6HY5TB"
   };
 
+// Check if we're in production (for future use)
+// const isProduction = process.env.NODE_ENV === 'production';
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 

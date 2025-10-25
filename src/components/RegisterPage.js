@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { UserPlus, ArrowLeft, Eye, EyeOff, Loader } from 'lucide-react';
 import { AuthServiceNew } from '../auth-service-new';
+import { runAllTests } from '../firebase-test';
 
 const RegisterPage = ({ onBack, onSuccess }) => {
   const [formData, setFormData] = useState({
@@ -16,6 +17,22 @@ const RegisterPage = ({ onBack, onSuccess }) => {
   const [errors, setErrors] = useState({});
   const [step, setStep] = useState('form'); // 'form' or 'otp'
   const [otp, setOtp] = useState('');
+  const [firebaseStatus, setFirebaseStatus] = useState(null);
+
+  // Test Firebase configuration on component mount
+  useEffect(() => {
+    const testFirebase = async () => {
+      console.log('Testing Firebase configuration...');
+      const status = runAllTests();
+      setFirebaseStatus(status);
+      
+      if (!status) {
+        console.error('Firebase configuration issues detected');
+      }
+    };
+    
+    testFirebase();
+  }, []);
 
   const validateForm = () => {
     const newErrors = {};
@@ -145,6 +162,13 @@ const RegisterPage = ({ onBack, onSuccess }) => {
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Create Account</h1>
           <p className="text-gray-600">Join Classic Cafe today</p>
         </div>
+
+        {/* Firebase Status Debug */}
+        {firebaseStatus === false && (
+          <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded-lg mb-6">
+            <strong>Firebase Configuration Issue:</strong> Please check browser console for details. Make sure reCAPTCHA is loaded and Firebase is properly configured.
+          </div>
+        )}
 
         {/* Error Message */}
         {errors.general && (
@@ -348,8 +372,6 @@ const RegisterPage = ({ onBack, onSuccess }) => {
           </p>
         </div>
 
-        {/* reCAPTCHA Container */}
-        <div id="recaptcha-container"></div>
       </div>
     </div>
   );

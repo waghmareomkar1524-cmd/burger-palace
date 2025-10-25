@@ -2,12 +2,10 @@
 import { database } from './firebase-config';
 import { 
   ref, 
-  push, 
   set, 
   get, 
   remove, 
   onValue, 
-  off,
   orderByChild,
   query,
   limitToFirst
@@ -94,7 +92,6 @@ export class OrderService {
   // Update order status
   static async updateOrderStatus(orderId, status) {
     try {
-      const orderRef = ref(database, `orders/${orderId}`);
       await set(ref(database, `orders/${orderId}/status`), status);
       
       // If order is completed, remove from queue
