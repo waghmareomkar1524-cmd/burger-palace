@@ -13,18 +13,10 @@ export class AuthServiceNew {
   // Send OTP for registration
   static async sendRegistrationOTP(mobile) {
     try {
-      console.log('🚀 Starting registration process for mobile:', mobile);
-      
-      // Debug: Check database contents first
-      await this.debugDatabase();
-      
       // First check if user already exists in database
-      console.log('🔍 Checking if user exists before registration...');
       const userCheck = await this.checkUserExists(mobile);
-      console.log('🔍 User check result:', userCheck);
       
       if (userCheck.exists) {
-        console.log('❌ User already exists for mobile:', mobile);
         return { 
           success: false, 
           error: 'User already exists. Please login instead.',
@@ -32,26 +24,12 @@ export class AuthServiceNew {
         };
       }
 
-      console.log('✅ User does not exist, proceeding with registration for mobile:', mobile);
-
       // Use the Twilio OTP service
       const result = await TwilioOTPService.sendOTP(mobile);
       
       // Always store the phone number for verification, even if SMS fails
       // This allows fallback OTP verification
       window.pendingPhoneNumber = mobile;
-      console.log('Phone number stored for verification:', mobile);
-      
-      if (result.success) {
-        console.log('OTP sent successfully');
-        
-        // In development, show the OTP in console
-        if (result.otp) {
-          console.log('🔐 OTP:', result.otp);
-        }
-      } else {
-        console.log('SMS sending failed, but OTP is available for testing:', result.otp);
-      }
       
       return result;
     } catch (error) {
@@ -66,26 +44,18 @@ export class AuthServiceNew {
   // Verify OTP and complete registration
   static async verifyOTPAndRegister(otp, userData) {
     try {
-      console.log('Verifying OTP:', otp);
-      console.log('Pending phone number:', window.pendingPhoneNumber);
-      console.log('User data:', userData);
-      
       if (!window.pendingPhoneNumber) {
-        console.error('No pending phone number found');
         return { success: false, error: 'No OTP session found. Please request OTP again.' };
       }
 
       // Verify OTP using the Twilio service
       // Use the mobile number from userData to ensure consistency
       const phoneNumberToVerify = userData.mobile || window.pendingPhoneNumber;
-      console.log('Using phone number for verification:', phoneNumberToVerify);
       const otpResult = await TwilioOTPService.verifyOTP(phoneNumberToVerify, otp);
       
       if (!otpResult.success) {
         return otpResult;
       }
-      
-      console.log('OTP verified successfully');
       
       // Create a mock user object
       const mockUser = {
@@ -107,33 +77,11 @@ export class AuthServiceNew {
           verified: true
         };
         
-        console.log('💾 Storing user data:', userDataToStore);
-        console.log('💾 Mobile number being stored:', `"${userDataToStore.mobile}" (type: ${typeof userDataToStore.mobile})`);
-        
         await set(userRef, userDataToStore);
         
-        console.log('✅ User data stored successfully:', {
-          userId: mockUser.uid,
-          name: userData.name,
-          surname: userData.surname,
-          mobile: userData.mobile,
-          phoneNumber: mockUser.phoneNumber
-        });
-        
-        // Verify the data was stored correctly
-        const verifyRef = ref(database, `users/${mockUser.uid}`);
-        const verifySnapshot = await get(verifyRef);
-        if (verifySnapshot.exists()) {
-          console.log('✅ Verification: Data stored correctly:', verifySnapshot.val());
-        } else {
-          console.log('❌ Verification: Data not found after storage');
-        }
-        
       } catch (dbError) {
-        console.error('❌ Database storage failed:', dbError);
         console.warn('Database storage failed, but user registration continues:', dbError.message);
         // Continue with registration even if database write fails
-        // In production, you might want to retry or use a different storage method
       }
       
       // Clear pending phone number
@@ -152,40 +100,25 @@ export class AuthServiceNew {
   // Check if user exists in database
   static async checkUserExists(mobile) {
     try {
-      console.log('🔍 Checking if user exists for mobile:', mobile);
-      console.log('🔍 Mobile type:', typeof mobile);
-      console.log('🔍 Mobile length:', mobile.length);
-      
       const usersRef = ref(database, 'users');
       const snapshot = await get(usersRef);
       
       if (snapshot.exists()) {
         const users = snapshot.val();
-        console.log('📊 Found users in database:', Object.keys(users).length);
-        console.log('📊 All users:', users);
         
         for (const userId in users) {
           const user = users[userId];
-          console.log(`🔍 Checking user ${userId}:`);
-          console.log(`  - Stored mobile: "${user.mobile}" (type: ${typeof user.mobile})`);
-          console.log(`  - Searching for: "${mobile}" (type: ${typeof mobile})`);
-          console.log(`  - Match: ${user.mobile === mobile}`);
           
           if (user.mobile === mobile) {
-            console.log('✅ User found with mobile:', mobile, 'userId:', userId);
             return { exists: true, userData: { [userId]: users[userId] } };
           }
         }
-      } else {
-        console.log('📊 No users found in database');
       }
       
-      console.log('❌ No user found with mobile:', mobile);
       return { exists: false };
     } catch (error) {
-      console.error('❌ Error checking user:', error);
+      console.error('Error checking user:', error);
       // Return false if database access fails - don't assume user exists
-      console.log('Database error, assuming user does not exist');
       return { exists: false, error: error.message };
     }
   }
@@ -193,15 +126,9 @@ export class AuthServiceNew {
   // Login user with OTP
   static async sendLoginOTP(mobile) {
     try {
-      console.log('Starting login process for mobile:', mobile);
-      
-      // Debug: Check database contents
-      await this.debugDatabase();
-      
       // First check if user exists in database
       const userCheck = await this.checkUserExists(mobile);
       if (!userCheck.exists) {
-        console.log('User not found in database for mobile:', mobile);
         return { 
           success: false, 
           error: 'User not found. Please register first.',
@@ -209,22 +136,12 @@ export class AuthServiceNew {
         };
       }
 
-      console.log('User found, sending login OTP to mobile:', mobile);
-
       // Use the Twilio OTP service
       const result = await TwilioOTPService.sendOTP(mobile);
 
       if (result.success) {
         // Store the phone number for verification
         window.pendingLoginPhoneNumber = mobile;
-        console.log('Login OTP sent successfully');
-
-        // In development, show the OTP in console
-        if (result.otp) {
-          console.log('🔐 Development Login OTP:', result.otp);
-        }
-      } else {
-        console.log('Failed to send login OTP:', result.error);
       }
 
       return result;
@@ -240,29 +157,20 @@ export class AuthServiceNew {
   // Verify OTP for login
   static async verifyLoginOTP(otp) {
     try {
-      console.log('Verifying login OTP:', otp);
-      
       if (!window.pendingLoginPhoneNumber) {
-        console.log('No pending login phone number found');
         return { success: false, error: 'No OTP session found. Please request OTP again.' };
       }
-
-      console.log('Verifying OTP for phone number:', window.pendingLoginPhoneNumber);
 
       // Verify OTP using the Twilio service
       const otpResult = await TwilioOTPService.verifyOTP(window.pendingLoginPhoneNumber, otp);
       
       if (!otpResult.success) {
-        console.log('OTP verification failed:', otpResult.error);
         return otpResult;
       }
-      
-      console.log('Login OTP verified successfully');
       
       // Find the user in database
       const userCheck = await this.checkUserExists(window.pendingLoginPhoneNumber);
       if (!userCheck.exists) {
-        console.log('User not found in database after OTP verification');
         return { success: false, error: 'User not found in database.' };
       }
       
@@ -275,13 +183,10 @@ export class AuthServiceNew {
         displayName: `${userData.name} ${userData.surname}`
       };
       
-      console.log('Login successful for user:', mockUser);
-      
       // Update last login
       try {
         const userRef = ref(database, `users/${userId}/lastLogin`);
         await set(userRef, Date.now());
-        console.log('Last login updated successfully');
       } catch (dbError) {
         console.warn('Failed to update last login, but login continues:', dbError.message);
         // Continue with login even if database update fails
@@ -390,31 +295,12 @@ export class AuthServiceNew {
   // Debug function to check all users in database
   static async debugDatabase() {
     try {
-      console.log('🔍 DEBUG: Checking all users in database...');
       const usersRef = ref(database, 'users');
       const snapshot = await get(usersRef);
       
-      if (snapshot.exists()) {
-        const users = snapshot.val();
-        console.log('📊 DEBUG: Found users in database:', Object.keys(users).length);
-        
-        for (const userId in users) {
-          const user = users[userId];
-          console.log(`📊 DEBUG: User ${userId}:`, {
-            name: user.name,
-            surname: user.surname,
-            mobile: user.mobile,
-            phoneNumber: user.phoneNumber,
-            createdAt: user.createdAt ? new Date(user.createdAt).toLocaleString() : 'N/A'
-          });
-        }
-      } else {
-        console.log('📊 DEBUG: No users found in database');
-      }
-      
       return snapshot.exists() ? snapshot.val() : {};
     } catch (error) {
-      console.error('❌ DEBUG: Error checking database:', error);
+      console.error('Error checking database:', error);
       return {};
     }
   }

@@ -1,6 +1,8 @@
 // Twilio SMS Integration for OTP Service
 // This service sends real SMS messages using Twilio
 
+import { PRODUCTION_CONFIG } from './production-config';
+
 export class TwilioOTPService {
   
   // Store OTPs in memory (in production, use a proper backend)
@@ -8,9 +10,9 @@ export class TwilioOTPService {
   
   // Twilio configuration
   static twilioConfig = {
-    accountSid: process.env.REACT_APP_TWILIO_ACCOUNT_SID || 'YOUR_TWILIO_ACCOUNT_SID_HERE',
-    authToken: process.env.REACT_APP_TWILIO_AUTH_TOKEN || 'YOUR_TWILIO_AUTH_TOKEN_HERE',
-    fromNumber: process.env.REACT_APP_TWILIO_FROM_NUMBER || 'YOUR_TWILIO_PHONE_NUMBER_HERE'
+    accountSid: process.env.REACT_APP_TWILIO_ACCOUNT_SID || PRODUCTION_CONFIG.TWILIO.ACCOUNT_SID,
+    authToken: process.env.REACT_APP_TWILIO_AUTH_TOKEN || PRODUCTION_CONFIG.TWILIO.AUTH_TOKEN,
+    fromNumber: process.env.REACT_APP_TWILIO_FROM_NUMBER || PRODUCTION_CONFIG.TWILIO.FROM_NUMBER
   };
   
   // Generate a random 6-digit OTP
@@ -21,8 +23,6 @@ export class TwilioOTPService {
   // Send OTP via Twilio SMS
   static async sendOTP(phoneNumber) {
     try {
-      console.log('Sending OTP via Twilio to:', phoneNumber);
-      
       // Generate OTP
       const otp = this.generateOTP();
       
@@ -39,25 +39,6 @@ export class TwilioOTPService {
       
       // Twilio SMS message
       const message = `Your Classic Cafe OTP is: ${otp}. Valid for 5 minutes. Do not share this code with anyone.`;
-      
-      // Force production mode for real SMS sending
-      // Comment out this block to enable real SMS sending
-      /*
-      if (process.env.NODE_ENV === 'development') {
-        console.log('🔐 Development Mode - OTP:', otp);
-        console.log('📱 Would send SMS to:', formattedNumber);
-        console.log('💬 Message:', message);
-        
-        // In development, simulate SMS sending
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        return { 
-          success: true, 
-          message: 'OTP sent successfully (Development Mode)',
-          otp: otp // Return OTP in development
-        };
-      }
-      */
       
       // Production mode - send real SMS via Twilio REST API
       try {
@@ -83,27 +64,22 @@ export class TwilioOTPService {
         }
         
         const messageResult = await response.json();
-        console.log('✅ SMS sent successfully via Twilio:', messageResult.sid);
-        console.log('🔐 OTP sent via SMS:', otp);
+        console.log('✅ OTP sent successfully');
         
         return { 
           success: true, 
-          message: 'OTP sent successfully via SMS',
-          messageId: messageResult.sid,
-          otp: otp // Include OTP for verification
+          message: 'OTP sent successfully',
+          messageId: messageResult.sid
         };
         
       } catch (twilioError) {
-        console.error('Twilio SMS Error:', twilioError);
+        console.error('SMS sending failed:', twilioError.message);
         
         // Fallback to development mode if Twilio fails
-        console.log('🔄 Falling back to development mode');
-        console.log('🔐 Fallback OTP for testing:', otp);
         return { 
           success: true, 
-          message: 'OTP sent successfully (Fallback Mode)',
-          otp: otp,
-          error: 'Twilio service unavailable, using fallback'
+          message: 'OTP sent successfully',
+          error: 'SMS service unavailable, using fallback'
         };
       }
       
@@ -119,10 +95,6 @@ export class TwilioOTPService {
   // Verify OTP
   static async verifyOTP(phoneNumber, enteredOTP) {
     try {
-      console.log('Verifying OTP for:', phoneNumber);
-      console.log('Entered OTP:', enteredOTP);
-      console.log('OTP Storage contents:', Array.from(this.otpStorage.entries()));
-      
       // Try to find OTP with different phone number formats
       let storedData = this.otpStorage.get(phoneNumber);
       let actualPhoneNumber = phoneNumber;
@@ -139,15 +111,12 @@ export class TwilioOTPService {
           storedData = this.otpStorage.get(format);
           if (storedData) {
             actualPhoneNumber = format;
-            console.log('Found OTP with format:', format);
             break;
           }
         }
       }
       
       if (!storedData) {
-        console.error('No stored OTP found for phone number:', phoneNumber);
-        console.error('Available phone numbers in storage:', Array.from(this.otpStorage.keys()));
         return { 
           success: false, 
           error: 'No OTP found for this number. Please request a new OTP.' 
@@ -173,13 +142,9 @@ export class TwilioOTPService {
       }
       
       // Verify OTP
-      console.log('Comparing stored OTP:', storedData.otp, 'with entered OTP:', enteredOTP);
-      console.log('OTP match:', storedData.otp === enteredOTP);
-      
       if (storedData.otp === enteredOTP) {
         // OTP is correct, remove it from storage
         this.otpStorage.delete(actualPhoneNumber);
-        console.log('✅ OTP verified successfully');
         return { success: true, message: 'OTP verified successfully' };
       } else {
         // Increment attempt count
@@ -187,7 +152,6 @@ export class TwilioOTPService {
         this.otpStorage.set(actualPhoneNumber, storedData);
         
         const remainingAttempts = 3 - storedData.attempts;
-        console.log('❌ OTP mismatch. Attempts:', storedData.attempts, 'Remaining:', remainingAttempts);
         return { 
           success: false, 
           error: `Invalid OTP. ${remainingAttempts} attempts remaining.` 
@@ -249,20 +213,6 @@ export class TwilioOTPService {
   // Test Twilio connection
   static async testTwilioConnection() {
     try {
-      // Always test Twilio connection (commented out development mode skip)
-      /*
-      if (process.env.NODE_ENV === 'development') {
-        return { 
-          success: true, 
-          message: 'Development mode - Twilio test skipped',
-          config: {
-            accountSid: this.twilioConfig.accountSid,
-            fromNumber: this.twilioConfig.fromNumber
-          }
-        };
-      }
-      */
-      
       // Test Twilio connection using REST API
       const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${this.twilioConfig.accountSid}.json`;
       
@@ -287,10 +237,10 @@ export class TwilioOTPService {
       };
       
     } catch (error) {
-      console.error('Twilio connection test failed:', error);
+      console.error('Twilio connection failed:', error.message);
       return { 
         success: false, 
-        error: error.message 
+        error: error.message
       };
     }
   }
