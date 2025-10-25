@@ -1,8 +1,6 @@
 // Twilio SMS Integration for OTP Service
 // This service sends real SMS messages using Twilio
 
-import { PRODUCTION_CONFIG } from './production-config';
-
 export class TwilioOTPService {
   
   // Store OTPs in memory (in production, use a proper backend)
@@ -10,9 +8,9 @@ export class TwilioOTPService {
   
   // Twilio configuration
   static twilioConfig = {
-    accountSid: process.env.REACT_APP_TWILIO_ACCOUNT_SID || PRODUCTION_CONFIG.TWILIO.ACCOUNT_SID,
-    authToken: process.env.REACT_APP_TWILIO_AUTH_TOKEN || PRODUCTION_CONFIG.TWILIO.AUTH_TOKEN,
-    fromNumber: process.env.REACT_APP_TWILIO_FROM_NUMBER || PRODUCTION_CONFIG.TWILIO.FROM_NUMBER
+    accountSid: process.env.REACT_APP_TWILIO_ACCOUNT_SID || 'YOUR_TWILIO_ACCOUNT_SID_HERE',
+    authToken: process.env.REACT_APP_TWILIO_AUTH_TOKEN || 'YOUR_TWILIO_AUTH_TOKEN_HERE',
+    fromNumber: process.env.REACT_APP_TWILIO_FROM_NUMBER || 'YOUR_TWILIO_PHONE_NUMBER_HERE'
   };
   
   // Generate a random 6-digit OTP

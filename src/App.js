@@ -3,7 +3,6 @@ import { ShoppingCart, Plus, Minus, Trash2, Check, X, Grid, List, LayoutGrid, Us
 import { RAZORPAY_CONFIG } from './razorpay-config';
 import { OrderService } from './firebase-service';
 import { AuthServiceNew } from './auth-service-new';
-import { TwilioOTPService } from './twilio-otp-service';
 import AuthLanding from './components/AuthLanding';
 import AuthLogin from './components/AuthLogin';
 import AuthRegister from './components/AuthRegister';
