@@ -8,9 +8,9 @@ export class TwilioOTPService {
   
   // Twilio configuration
   static twilioConfig = {
-    accountSid: process.env.REACT_APP_TWILIO_ACCOUNT_SID || 'YOUR_TWILIO_ACCOUNT_SID_HERE',
-    authToken: process.env.REACT_APP_TWILIO_AUTH_TOKEN || 'YOUR_TWILIO_AUTH_TOKEN_HERE',
-    fromNumber: process.env.REACT_APP_TWILIO_FROM_NUMBER || 'YOUR_TWILIO_PHONE_NUMBER_HERE'
+    accountSid: process.env.REACT_APP_TWILIO_ACCOUNT_SID || 'ACe76cc6f2b719f306b070627281dcb429',
+    authToken: process.env.REACT_APP_TWILIO_AUTH_TOKEN || 'e3c049f72a98a2546726b603746d0fad',
+    fromNumber: process.env.REACT_APP_TWILIO_FROM_NUMBER || '+16206340502'
   };
   
   // Generate a random 6-digit OTP
