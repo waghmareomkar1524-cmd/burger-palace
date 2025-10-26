@@ -6,11 +6,11 @@ export class TwilioOTPService {
   // Store OTPs in memory (in production, use a proper backend)
   static otpStorage = new Map();
   
-  // Twilio configuration
+  // Twilio configuration - Using environment variables
   static twilioConfig = {
-    accountSid: process.env.REACT_APP_TWILIO_ACCOUNT_SID || 'ACe76cc6f2b719f306b070627281dcb429',
-    authToken: process.env.REACT_APP_TWILIO_AUTH_TOKEN || 'e3c049f72a98a2546726b603746d0fad',
-    fromNumber: process.env.REACT_APP_TWILIO_FROM_NUMBER || '+16206340502'
+    accountSid: process.env.REACT_APP_TWILIO_ACCOUNT_SID,
+    authToken: process.env.REACT_APP_TWILIO_AUTH_TOKEN,
+    fromNumber: process.env.REACT_APP_TWILIO_FROM_NUMBER
   };
   
   // Generate a random 6-digit OTP
@@ -21,6 +21,22 @@ export class TwilioOTPService {
   // Send OTP via Twilio SMS
   static async sendOTP(phoneNumber) {
     try {
+      // Check if environment variables are properly set
+      if (!this.twilioConfig.accountSid || !this.twilioConfig.authToken || !this.twilioConfig.fromNumber) {
+        console.error('❌ Twilio environment variables not properly configured');
+        return { 
+          success: false, 
+          error: 'Twilio service not configured. Please check environment variables.' 
+        };
+      }
+
+      // Debug: Log the configuration being used
+      console.log('🔍 Twilio Config (Environment Variables):', {
+        accountSid: this.twilioConfig.accountSid,
+        fromNumber: this.twilioConfig.fromNumber,
+        hasAuthToken: !!this.twilioConfig.authToken
+      });
+      
       // Generate OTP
       const otp = this.generateOTP();
       
@@ -211,35 +227,36 @@ export class TwilioOTPService {
   // Test Twilio connection
   static async testTwilioConnection() {
     try {
-      // Test Twilio connection using REST API
-      const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${this.twilioConfig.accountSid}.json`;
+      // Check if environment variables are properly set
+      if (!this.twilioConfig.accountSid || !this.twilioConfig.authToken) {
+        console.error('❌ Twilio environment variables not properly configured');
+        return { 
+          success: false, 
+          error: 'Twilio service not configured. Please check environment variables.' 
+        };
+      }
+
+      console.log('🔍 Testing Twilio credentials...');
       
-      const response = await fetch(twilioUrl, {
+      const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${this.twilioConfig.accountSid}.json`, {
         method: 'GET',
         headers: {
           'Authorization': 'Basic ' + btoa(`${this.twilioConfig.accountSid}:${this.twilioConfig.authToken}`),
         }
       });
       
-      if (!response.ok) {
-        const errorData = await response.text();
-        throw new Error(`Twilio API Error: ${response.status} - ${errorData}`);
+      if (response.ok) {
+        const account = await response.json();
+        console.log('✅ Twilio credentials are valid:', account.status);
+        return { success: true, account };
+      } else {
+        const error = await response.text();
+        console.error('❌ Twilio credentials are invalid:', response.status, error);
+        return { success: false, error };
       }
-      
-      const account = await response.json();
-      
-      return { 
-        success: true, 
-        message: 'Twilio connection successful',
-        accountStatus: account.status
-      };
-      
     } catch (error) {
-      console.error('Twilio connection failed:', error.message);
-      return { 
-        success: false, 
-        error: error.message
-      };
+      console.error('❌ Twilio test failed:', error);
+      return { success: false, error: error.message };
     }
   }
 }

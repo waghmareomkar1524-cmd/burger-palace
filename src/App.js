@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { ShoppingCart, Plus, Minus, Trash2, Check, X, Grid, List, LayoutGrid, User } from 'lucide-react';
-import { RAZORPAY_CONFIG } from './razorpay-config';
+import { RAZORPAY_CONFIG } from './razorpay-config.js';
 import { OrderService } from './firebase-service';
 import { AuthServiceNew } from './auth-service-new';
 import AuthLanding from './components/AuthLanding';
