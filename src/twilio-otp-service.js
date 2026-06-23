@@ -1,4 +1,4 @@
-// Fast2SMS Integration for OTP Service
+// Twilio OTP Service
 // Calls /api/send-otp (Vercel serverless function) to avoid CORS issues
 
 export class TwilioOTPService {

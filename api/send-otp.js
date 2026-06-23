@@ -1,8 +1,7 @@
-// Vercel serverless function — proxies OTP request to Fast2SMS
-// Keeps the API key server-side and avoids CORS issues
+// Vercel serverless function — proxies OTP request to Twilio
+// Keeps credentials server-side and avoids CORS issues
 
 export default async function handler(req, res) {
-  // Only allow POST
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -13,37 +12,49 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'phone and otp are required' });
   }
 
-  // Strip country code — Fast2SMS expects 10-digit Indian number
-  const digits = phone.replace(/^\+91/, '').replace(/^91/, '');
+  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  const fromNumber = process.env.TWILIO_FROM_NUMBER;
 
-  if (!/^\d{10}$/.test(digits)) {
-    return res.status(400).json({ error: 'Invalid phone number' });
+  if (!accountSid || !authToken || !fromNumber) {
+    return res.status(500).json({ error: 'Twilio not configured' });
+  }
+
+  // Format to E.164 — add +91 if it's a 10-digit Indian number
+  let toNumber = phone;
+  if (/^\d{10}$/.test(phone)) {
+    toNumber = `+91${phone}`;
+  } else if (/^91\d{10}$/.test(phone)) {
+    toNumber = `+${phone}`;
   }
 
   try {
-    const response = await fetch('https://www.fast2sms.com/dev/bulkV2', {
+    const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
+
+    const formData = new URLSearchParams();
+    formData.append('To', toNumber);
+    formData.append('From', fromNumber);
+    formData.append('Body', `Your Classic Cafe OTP is: ${otp}. Valid for 5 minutes. Do not share this code with anyone.`);
+
+    const response = await fetch(twilioUrl, {
       method: 'POST',
       headers: {
-        'authorization': process.env.REACT_APP_FAST2SMS_API_KEY,
-        'Content-Type': 'application/json'
+        'Authorization': 'Basic ' + Buffer.from(`${accountSid}:${authToken}`).toString('base64'),
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: JSON.stringify({
-        route: 'otp',
-        variables_values: otp,
-        numbers: digits
-      })
+      body: formData
     });
 
     const result = await response.json();
 
-    if (result.return === true) {
-      return res.status(200).json({ success: true, request_id: result.request_id });
+    if (response.ok) {
+      return res.status(200).json({ success: true, messageId: result.sid });
     } else {
-      const errorMsg = Array.isArray(result.message) ? result.message[0] : result.message;
-      return res.status(400).json({ success: false, error: errorMsg || 'SMS sending failed' });
+      console.error('Twilio error:', result);
+      return res.status(400).json({ success: false, error: result.message || 'Failed to send OTP' });
     }
   } catch (error) {
-    console.error('Fast2SMS error:', error);
+    console.error('Send OTP error:', error);
     return res.status(500).json({ success: false, error: 'SMS service unavailable' });
   }
 }
