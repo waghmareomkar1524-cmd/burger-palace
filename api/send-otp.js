@@ -39,7 +39,8 @@ export default async function handler(req, res) {
     if (result.return === true) {
       return res.status(200).json({ success: true, request_id: result.request_id });
     } else {
-      return res.status(400).json({ success: false, error: result.message?.[0] || 'SMS sending failed' });
+      const errorMsg = Array.isArray(result.message) ? result.message[0] : result.message;
+      return res.status(400).json({ success: false, error: errorMsg || 'SMS sending failed' });
     }
   } catch (error) {
     console.error('Fast2SMS error:', error);
