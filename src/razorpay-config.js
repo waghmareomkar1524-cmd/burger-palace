@@ -2,9 +2,8 @@
 // Replace these with your actual Razorpay credentials
 
 export const RAZORPAY_CONFIG = {
-  // Get these from your Razorpay Dashboard: https://dashboard.razorpay.com/app/keys
-  key_id: process.env.REACT_APP_RAZORPAY_KEY_ID || 'rzp_test_RWZAPFKaHDzUTe', // Your Razorpay Test Key ID
-  key_secret: process.env.REACT_APP_RAZORPAY_KEY_SECRET || '1TKmWMkiNenFqEwKNhmIrZ8Z', // Your Razorpay Test Key Secret (keep this secure!)
+  key_id: 'rzp_test_RWZAPFKaHDzUTe',
+  key_secret: '1TKmWMkiNenFqEwKNhmIrZ8Z',
   
   // App Configuration
   currency: 'INR',
